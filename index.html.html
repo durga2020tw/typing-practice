@@ -1,0 +1,520 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --correct: #52C77A; --error: #FF4757; }
+#app {
+  font-family: 'Nunito', sans-serif;
+  padding: 1rem 0.5rem 2rem;
+  max-width: 700px; margin: 0 auto;
+  background: linear-gradient(160deg, #FFF9F0 0%, #F0F7FF 50%, #FFF0F7 100%);
+  border-radius: 24px; position: relative; overflow: hidden;
+}
+#app::before {
+  content: '⭐ 🌈 ✨ 🎯 ⭐ 🌟 🎈 ✨';
+  position: absolute; top: 8px; left: 0; right: 0;
+  text-align: center; font-size: 18px; letter-spacing: 6px; opacity: 0.3;
+  pointer-events: none;
+}
+.title-area { text-align: center; padding: 2rem 1rem 1rem; }
+.title-area h1 { font-size: 28px; font-weight: 900; color: #7C3AED; letter-spacing: 1px; }
+.title-area p { font-size: 14px; color: #A78BFA; margin-top: 4px; font-weight: 700; }
+.tab-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1.25rem; flex-wrap: wrap; padding: 0 1rem; }
+.tab { padding: 8px 18px; font-size: 14px; font-weight: 800; border: 3px solid transparent; border-radius: 99px; background: white; color: #9CA3AF; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.tab:hover { transform: translateY(-2px); }
+.tab.active.t0 { background: #FFD6E7; color: #BE185D; border-color: #F9A8D4; }
+.tab.active.t1 { background: #DDD6FE; color: #5B21B6; border-color: #A78BFA; }
+.tab.active.t2 { background: #C8F7E0; color: #065F46; border-color: #6EE7B7; }
+.settings-card { background: white; border-radius: 20px; padding: 1.25rem 1.5rem; margin: 0 1rem 1.25rem; box-shadow: 0 4px 16px rgba(124,58,237,0.1); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.settings-card label { font-size: 14px; font-weight: 800; color: #6B7280; }
+select { font-size: 14px; font-weight: 700; padding: 6px 12px; border: 3px solid #E9D5FF; border-radius: 12px; background: #FAF5FF; color: #5B21B6; font-family: 'Nunito', sans-serif; cursor: pointer; }
+.start-btn { margin-left: auto; padding: 10px 22px; font-size: 15px; font-weight: 900; background: linear-gradient(135deg, #7C3AED, #A78BFA); color: white; border: none; border-radius: 14px; cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 12px rgba(124,58,237,0.4); transition: all 0.2s; }
+.start-btn:hover { transform: translateY(-2px); }
+.start-btn:active { transform: scale(0.97); }
+.hidden { display: none; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 1rem 1rem; }
+.stat-card { border-radius: 16px; padding: 12px 14px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.06); }
+.stat-card:nth-child(1) { background: #FFF3C4; }
+.stat-card:nth-child(2) { background: #C8F7E0; }
+.stat-card:nth-child(3) { background: #FFD6E7; }
+.stat-card .lbl { font-size: 12px; font-weight: 800; color: #6B7280; }
+.stat-card .val { font-size: 22px; font-weight: 900; color: #374151; }
+.progress-bar-wrap { margin: 0 1rem 1rem; height: 12px; background: #E9D5FF; border-radius: 99px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #7C3AED, #EC4899); border-radius: 99px; transition: width 0.4s ease; }
+
+/* Word card with hint */
+.word-card {
+  background: white; border-radius: 24px; margin: 0 1rem 1rem;
+  box-shadow: 0 6px 24px rgba(124,58,237,0.12);
+  border: 3px solid #E9D5FF; overflow: hidden; cursor: text;
+}
+.word-card-top {
+  display: flex; align-items: stretch; gap: 0;
+}
+.hint-side {
+  width: 120px; min-width: 120px;
+  background: linear-gradient(160deg, #FAF5FF, #EDE9FE);
+  border-right: 2px dashed #DDD6FE;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 1rem 0.75rem; gap: 6px;
+}
+.hint-side .zh { font-size: 18px; font-weight: 900; color: #5B21B6; text-align: center; line-height: 1.3; }
+.hint-side svg { display: block; }
+.typing-side { flex: 1; padding: 1.25rem 1.25rem 1rem; }
+.row-label { font-size: 11px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.target-label { color: #A78BFA; }
+.typed-label { color: #34D399; }
+.target-text { font-size: 26px; font-weight: 800; line-height: 1.8; word-break: break-all; min-height: 48px; letter-spacing: 2px; }
+.typed-row-inner { background: #FAF5FF; border-top: 2px dashed #E9D5FF; padding: 0.9rem 1.25rem 1rem; }
+.typed-text { font-size: 26px; font-weight: 800; line-height: 1.8; word-break: break-all; min-height: 48px; letter-spacing: 2px; }
+.ch { color: #D1D5DB; white-space: pre; }
+.ch.correct { color: var(--correct); }
+.ch.error { color: var(--error); text-decoration: underline wavy; }
+.ch.current { background: #FDE68A; color: #92400E; border-radius: 6px; animation: pulse-cur 0.8s ease-in-out infinite alternate; }
+@keyframes pulse-cur { from{background:#FDE68A}to{background:#FCD34D} }
+.t-correct { color: var(--correct); font-weight: 900; }
+.t-error { color: var(--error); font-weight: 900; text-decoration: underline wavy; }
+.t-cursor { display: inline-block; width: 3px; height: 1em; background: #7C3AED; vertical-align: text-bottom; border-radius: 2px; margin-left: 2px; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:0} }
+
+/* Special key card (no hint side) */
+.special-card {
+  background: white; border-radius: 24px; margin: 0 1rem 1rem;
+  box-shadow: 0 6px 24px rgba(124,58,237,0.12);
+  border: 3px solid #E9D5FF; overflow: hidden; cursor: text;
+}
+.special-target { padding: 1.25rem 1.5rem 1rem; }
+.key-badge { display: inline-flex; align-items: center; gap: 3px; background: #F3F4F6; border: 3px solid #D1D5DB; border-radius: 12px; padding: 4px 12px; font-size: 16px; font-weight: 800; font-family: 'Nunito', sans-serif; color: #374151; vertical-align: middle; margin: 3px; }
+.key-badge.correct { background: #C8F7E0; border-color: #6EE7B7; color: #065F46; }
+.key-badge.error { background: #FFE4E6; border-color: #FCA5A5; color: #991B1B; }
+.key-badge.current { background: #FDE68A; border-color: #FCD34D; color: #78350F; animation: pulse-cur 0.8s ease-in-out infinite alternate; }
+.key-typed-row { padding: 0.9rem 1.5rem 1.1rem; background: #FAF5FF; border-top: 2px dashed #E9D5FF; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 58px; }
+.key-typed-badge { display: inline-flex; align-items: center; background: white; border: 3px solid #D1D5DB; border-radius: 10px; padding: 4px 12px; font-size: 15px; font-weight: 800; font-family: 'Nunito', sans-serif; color: #374151; }
+.key-typed-badge.ok { background: #C8F7E0; border-color: #6EE7B7; color: #065F46; }
+.key-typed-badge.fail { background: #FFE4E6; border-color: #FCA5A5; color: #991B1B; }
+.key-typed-empty { font-size: 13px; font-weight: 700; color: #C4B5FD; }
+
+.hint-bar { margin: 0 1rem 1rem; background: #FEF3C7; border-radius: 14px; padding: 10px 16px; font-size: 14px; font-weight: 800; color: #78350F; border: 2px solid #FCD34D; }
+.hint-bar span { color: #7C3AED; }
+.ghost-wrap { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.btn-row { display: flex; gap: 10px; margin: 0 1rem; flex-wrap: wrap; }
+.action-btn { padding: 10px 20px; font-size: 14px; font-weight: 900; border: 3px solid #E9D5FF; border-radius: 14px; background: white; color: #7C3AED; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.2s; }
+.action-btn:hover { background: #FAF5FF; transform: translateY(-2px); }
+.result-panel-box { background: white; border-radius: 24px; margin: 0 1rem; box-shadow: 0 6px 24px rgba(124,58,237,0.15); padding: 2rem; text-align: center; border: 3px solid #E9D5FF; }
+.result-star { font-size: 48px; display: block; margin-bottom: 8px; animation: pop 0.5s cubic-bezier(.175,.885,.32,1.275); }
+@keyframes pop { from{transform:scale(0)}to{transform:scale(1)} }
+.result-pct { font-size: 64px; font-weight: 900; color: #7C3AED; line-height: 1; }
+.result-msg { font-size: 18px; font-weight: 800; color: #A78BFA; margin: 6px 0 1.5rem; }
+.result-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.5rem; }
+.result-grid .stat-card { border-radius: 14px; }
+</style>
+
+<div id="app">
+  <div class="title-area">
+    <h1>🌟 打字小英雄 🌟</h1>
+    <p>練習打字，變成最厲害的小英雄！</p>
+  </div>
+  <div class="tab-row">
+    <button class="tab t0 active" onclick="setMode('english')">🍎 英文單字</button>
+    <button class="tab t1" onclick="setMode('special')">⌨️ 特殊按鍵</button>
+    <button class="tab t2" onclick="setMode('mixed')">🎯 混合挑戰</button>
+  </div>
+  <div class="settings-card">
+    <label>難度 🎈</label>
+    <select id="difficulty">
+      <option value="easy">⭐ 簡單</option>
+      <option value="medium" selected>⭐⭐ 普通</option>
+      <option value="hard">⭐⭐⭐ 挑戰</option>
+    </select>
+    <label style="margin-left:8px;">題數 🎯</label>
+    <select id="total-q">
+      <option value="5">5 題</option>
+      <option value="10" selected>10 題</option>
+      <option value="20">20 題</option>
+    </select>
+    <button class="start-btn" onclick="startSession()">開始 🚀</button>
+  </div>
+
+  <div id="practice-area" class="hidden">
+    <div class="stats-row">
+      <div class="stat-card"><div class="lbl">正確率 🎯</div><div class="val" id="accuracy">—</div></div>
+      <div class="stat-card"><div class="lbl">進度 🏃</div><div class="val" id="q-progress">0/0</div></div>
+      <div class="stat-card"><div class="lbl">錯誤 😅</div><div class="val" id="err-count">0</div></div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
+    <div id="question-area"></div>
+    <div class="hint-bar" id="hint-bar">👆 點擊題目區域開始打字！</div>
+    <div class="ghost-wrap"><input id="ghost" style="position:absolute;opacity:0;width:1px;height:1px;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></div>
+    <div class="btn-row">
+      <button class="action-btn" onclick="skipQuestion()">跳過 ⏭️</button>
+      <button class="action-btn" onclick="startSession()">重來 🔄</button>
+    </div>
+  </div>
+
+  <div id="result-panel" class="hidden">
+    <div class="result-panel-box">
+      <span class="result-star" id="result-star">🏆</span>
+      <div class="result-pct" id="final-acc">—</div>
+      <div class="result-msg" id="result-msg">太棒了！</div>
+      <div class="result-grid">
+        <div class="stat-card"><div class="lbl">總題數</div><div class="val" id="r-total">—</div></div>
+        <div class="stat-card"><div class="lbl">答對 ✅</div><div class="val" id="r-correct">—</div></div>
+        <div class="stat-card"><div class="lbl">錯誤 ❌</div><div class="val" id="r-errors">—</div></div>
+      </div>
+      <button class="start-btn" onclick="startSession()" style="width:100%;font-size:16px;padding:14px;">再玩一次 🎉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// SVG icons for each word
+const ICONS = {
+  // animals
+  cat:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="30" r="16" fill="#FFD6E7"/><ellipse cx="20" cy="22" rx="5" ry="7" fill="#FFD6E7"/><ellipse cx="36" cy="22" rx="5" ry="7" fill="#FFD6E7"/><circle cx="23" cy="31" r="3" fill="#555"/><circle cx="33" cy="31" r="3" fill="#555"/><ellipse cx="28" cy="36" rx="3" ry="2" fill="#FF8FAB"/><line x1="28" y1="38" x2="28" y2="42" stroke="#FF8FAB" stroke-width="2"/><line x1="18" y1="34" x2="10" y2="32" stroke="#aaa" stroke-width="1.5"/><line x1="18" y1="36" x2="10" y2="36" stroke="#aaa" stroke-width="1.5"/><line x1="38" y1="34" x2="46" y2="32" stroke="#aaa" stroke-width="1.5"/><line x1="38" y1="36" x2="46" y2="36" stroke="#aaa" stroke-width="1.5"/></svg>`,
+  dog:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="30" r="14" fill="#FBBF24"/><ellipse cx="18" cy="24" rx="5" ry="8" fill="#FBBF24"/><ellipse cx="38" cy="24" rx="5" ry="8" fill="#D97706"/><circle cx="23" cy="31" r="3" fill="#555"/><circle cx="33" cy="31" r="3" fill="#555"/><ellipse cx="28" cy="37" rx="5" ry="3" fill="#D97706"/><ellipse cx="28" cy="36" rx="3" ry="2" fill="#F87171"/></svg>`,
+  sun:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="11" fill="#FCD34D"/>${[0,45,90,135,180,225,270,315].map(a=>`<line x1="28" y1="28" x2="${28+Math.cos(a*Math.PI/180)*20}" y2="${28+Math.sin(a*Math.PI/180)*20}" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>`).join('')}</svg>`,
+  apple:`<svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="28" cy="33" rx="16" ry="15" fill="#EF4444"/><path d="M28 18 Q32 10 38 12" stroke="#16A34A" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="22" cy="28" rx="4" ry="6" fill="rgba(255,255,255,0.25)"/></svg>`,
+  // computer words
+  mouse:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="17" y="20" width="22" height="28" rx="11" fill="#A78BFA"/><rect x="17" y="20" width="22" height="14" rx="0" fill="#A78BFA"/><line x1="28" y1="20" x2="28" y2="34" stroke="white" stroke-width="2"/><rect x="23" y="24" width="6" height="6" rx="3" fill="white"/></svg>`,
+  screen:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="12" width="40" height="26" rx="4" fill="#60A5FA"/><rect x="10" y="14" width="36" height="22" rx="2" fill="#DBEAFE"/><rect x="22" y="38" width="12" height="4" fill="#93C5FD"/><rect x="18" y="42" width="20" height="3" rx="1.5" fill="#BFDBFE"/></svg>`,
+  keyboard:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="6" y="18" width="44" height="22" rx="4" fill="#6D28D9"/><rect x="10" y="22" width="6" height="5" rx="1.5" fill="white"/><rect x="19" y="22" width="6" height="5" rx="1.5" fill="white"/><rect x="28" y="22" width="6" height="5" rx="1.5" fill="white"/><rect x="37" y="22" width="6" height="5" rx="1.5" fill="white"/><rect x="10" y="30" width="6" height="5" rx="1.5" fill="white"/><rect x="19" y="30" width="6" height="5" rx="1.5" fill="white"/><rect x="17" y="30" width="24" height="5" rx="2.5" fill="#C4B5FD"/><rect x="37" y="30" width="6" height="5" rx="1.5" fill="white"/></svg>`,
+  folder:`<svg width="56" height="56" viewBox="0 0 56 56"><path d="M8 20 Q8 16 12 16 L22 16 L26 20 L44 20 Q48 20 48 24 L48 40 Q48 44 44 44 L12 44 Q8 44 8 40 Z" fill="#FBBF24"/><path d="M8 24 L48 24 L48 40 Q48 44 44 44 L12 44 Q8 44 8 40 Z" fill="#FDE68A"/></svg>`,
+  file:`<svg width="56" height="56" viewBox="0 0 56 56"><path d="M14 8 L38 8 L46 16 L46 50 Q46 52 44 52 L14 52 Q12 52 12 50 L12 10 Q12 8 14 8Z" fill="#93C5FD"/><path d="M36 8 L36 18 L46 18Z" fill="#BFDBFE"/><line x1="18" y1="26" x2="38" y2="26" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="32" x2="38" y2="32" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="38" x2="30" y2="38" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  internet:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="18" fill="none" stroke="#34D399" stroke-width="3"/><ellipse cx="28" cy="28" rx="10" ry="18" fill="none" stroke="#34D399" stroke-width="2"/><line x1="10" y1="28" x2="46" y2="28" stroke="#34D399" stroke-width="2"/><line x1="12" y1="20" x2="44" y2="20" stroke="#34D399" stroke-width="1.5"/><line x1="12" y1="36" x2="44" y2="36" stroke="#34D399" stroke-width="1.5"/></svg>`,
+  printer:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="10" y="22" width="36" height="20" rx="4" fill="#94A3B8"/><rect x="16" y="12" width="24" height="12" rx="2" fill="#CBD5E1"/><rect x="14" y="36" width="28" height="14" rx="2" fill="#E2E8F0"/><rect x="18" y="40" width="20" height="2.5" rx="1" fill="#94A3B8"/><rect x="18" y="44" width="14" height="2.5" rx="1" fill="#94A3B8"/><circle cx="39" cy="30" r="3" fill="#34D399"/></svg>`,
+  camera:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="6" y="18" width="44" height="30" rx="5" fill="#374151"/><circle cx="28" cy="33" r="10" fill="#1F2937"/><circle cx="28" cy="33" r="7" fill="#60A5FA"/><circle cx="28" cy="33" r="4" fill="#1D4ED8"/><rect x="18" y="12" width="12" height="8" rx="3" fill="#374151"/><circle cx="42" cy="24" r="3" fill="#FCD34D"/></svg>`,
+  robot:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="14" y="20" width="28" height="22" rx="5" fill="#818CF8"/><rect x="18" y="26" width="7" height="7" rx="3.5" fill="white"/><rect x="31" y="26" width="7" height="7" rx="3.5" fill="white"/><circle cx="21.5" cy="29.5" r="2.5" fill="#3730A3"/><circle cx="34.5" cy="29.5" r="2.5" fill="#3730A3"/><rect x="20" y="36" width="16" height="3" rx="1.5" fill="white"/><rect x="22" y="12" width="12" height="10" rx="4" fill="#818CF8"/><rect x="27" y="8" width="2" height="6" rx="1" fill="#A78BFA"/><circle cx="28" cy="7" r="3" fill="#FCD34D"/><rect x="6" y="26" width="6" height="10" rx="3" fill="#818CF8"/><rect x="44" y="26" width="6" height="10" rx="3" fill="#818CF8"/></svg>`,
+  laptop:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="10" y="14" width="36" height="24" rx="3" fill="#475569"/><rect x="12" y="16" width="32" height="20" rx="2" fill="#BAE6FD"/><rect x="4" y="38" width="48" height="5" rx="2" fill="#64748B"/><rect x="20" y="38" width="16" height="2" rx="1" fill="#94A3B8"/></svg>`,
+  wifi:`<svg width="56" height="56" viewBox="0 0 56 56"><path d="M10 26 Q28 10 46 26" stroke="#818CF8" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M16 32 Q28 20 40 32" stroke="#818CF8" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M22 38 Q28 32 34 38" stroke="#818CF8" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="28" cy="44" r="4" fill="#818CF8"/></svg>`,
+  email:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="6" y="14" width="44" height="30" rx="5" fill="#60A5FA"/><polyline points="6,14 28,32 50,14" fill="none" stroke="white" stroke-width="3"/><line x1="6" y1="44" x2="20" y2="30" stroke="white" stroke-width="2"/><line x1="50" y1="44" x2="36" y2="30" stroke="white" stroke-width="2"/></svg>`,
+  password:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="12" y="26" width="32" height="22" rx="5" fill="#F59E0B"/><path d="M18 26 L18 20 Q18 10 28 10 Q38 10 38 20 L38 26" fill="none" stroke="#D97706" stroke-width="4" stroke-linecap="round"/><circle cx="28" cy="37" r="5" fill="#FEF3C7"/><rect x="26" y="37" width="4" height="6" rx="2" fill="#F59E0B"/></svg>`,
+  upload:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="36" width="40" height="12" rx="4" fill="#C4B5FD"/><path d="M28 10 L28 32" stroke="#7C3AED" stroke-width="4" stroke-linecap="round"/><polyline points="18,20 28,10 38,20" fill="none" stroke="#7C3AED" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  download:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="36" width="40" height="12" rx="4" fill="#6EE7B7"/><path d="M28 8 L28 30" stroke="#059669" stroke-width="4" stroke-linecap="round"/><polyline points="18,22 28,32 38,22" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  video:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="4" y="14" width="34" height="28" rx="5" fill="#F87171"/><polygon points="52,28 36,18 36,38" fill="#FCA5A5"/><circle cx="20" cy="28" r="8" fill="rgba(255,255,255,0.3)"/><polygon points="17,24 17,32 25,28" fill="white"/></svg>`,
+  button:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="18" width="40" height="20" rx="10" fill="#34D399"/><text x="28" y="32" text-anchor="middle" font-size="13" font-weight="900" fill="white" font-family="Nunito,sans-serif">OK</text></svg>`,
+  cursor:`<svg width="56" height="56" viewBox="0 0 56 56"><polygon points="14,8 14,42 24,32 30,46 36,43 30,29 44,28" fill="#7C3AED"/><polygon points="14,8 14,42 24,32 30,46 36,43 30,29 44,28" fill="none" stroke="white" stroke-width="2"/></svg>`,
+  // general
+  happy:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" fill="#FCD34D"/><circle cx="21" cy="24" r="3" fill="#374151"/><circle cx="35" cy="24" r="3" fill="#374151"/><path d="M18 34 Q28 44 38 34" stroke="#374151" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+  water:`<svg width="56" height="56" viewBox="0 0 56 56"><path d="M28 8 Q14 24 14 34 Q14 46 28 46 Q42 46 42 34 Q42 24 28 8Z" fill="#60A5FA"/><path d="M20 36 Q22 30 28 28" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+  bread:`<svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="28" cy="34" rx="20" ry="12" fill="#D97706"/><ellipse cx="28" cy="28" rx="20" ry="10" fill="#FBBF24"/><ellipse cx="28" cy="26" rx="18" ry="8" fill="#FDE68A"/></svg>`,
+  clock:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" fill="white" stroke="#818CF8" stroke-width="4"/><line x1="28" y1="28" x2="28" y2="14" stroke="#374151" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="28" x2="40" y2="34" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round"/><circle cx="28" cy="28" r="2.5" fill="#374151"/></svg>`,
+  house:`<svg width="56" height="56" viewBox="0 0 56 56"><polygon points="28,8 8,28 14,28 14,48 42,48 42,28 48,28" fill="#FCA5A5"/><rect x="22" y="34" width="12" height="14" rx="2" fill="#B45309"/><polygon points="28,8 8,28 48,28" fill="#EF4444"/></svg>`,
+  magic:`<svg width="56" height="56" viewBox="0 0 56 56"><line x1="14" y1="42" x2="40" y2="16" stroke="#7C3AED" stroke-width="5" stroke-linecap="round"/><polygon points="40,16 30,14 38,8 44,18 36,20" fill="#FCD34D"/><circle cx="18" cy="14" r="3" fill="#FCD34D"/><circle cx="44" cy="38" r="2" fill="#FCD34D"/><circle cx="12" cy="30" r="2" fill="#A78BFA"/><circle cx="36" cy="44" r="2" fill="#34D399"/></svg>`,
+  ocean:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="4" y="28" width="48" height="22" rx="4" fill="#60A5FA"/><path d="M4 32 Q10 26 16 32 Q22 38 28 32 Q34 26 40 32 Q46 38 52 32" stroke="#3B82F6" stroke-width="3" fill="none"/><circle cx="28" cy="18" r="10" fill="#FCD34D"/></svg>`,
+  plant:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="22" y="36" width="12" height="14" rx="3" fill="#D97706"/><path d="M28 36 Q28 22 18 16" stroke="#16A34A" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="18" cy="15" rx="8" ry="6" fill="#22C55E" transform="rotate(-20,18,15)"/><path d="M28 30 Q28 20 38 14" stroke="#16A34A" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="13" rx="8" ry="6" fill="#4ADE80" transform="rotate(20,38,13)"/></svg>`,
+  tiger:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="30" r="16" fill="#F97316"/><ellipse cx="20" cy="22" rx="5" ry="7" fill="#F97316"/><ellipse cx="36" cy="22" rx="5" ry="7" fill="#F97316"/><circle cx="23" cy="31" r="3" fill="#1F2937"/><circle cx="33" cy="31" r="3" fill="#1F2937"/><ellipse cx="28" cy="37" rx="4" ry="3" fill="#FED7AA"/><line x1="20" y1="28" x2="12" y2="26" stroke="#92400E" stroke-width="1.5"/><line x1="20" y1="30" x2="12" y2="30" stroke="#92400E" stroke-width="1.5"/><line x1="36" y1="28" x2="44" y2="26" stroke="#92400E" stroke-width="1.5"/><line x1="36" y1="30" x2="44" y2="30" stroke="#92400E" stroke-width="1.5"/></svg>`,
+  butterfly:`<svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="16" cy="22" rx="12" ry="9" fill="#F472B6" transform="rotate(-20,16,22)"/><ellipse cx="40" cy="22" rx="12" ry="9" fill="#818CF8" transform="rotate(20,40,22)"/><ellipse cx="16" cy="36" rx="9" ry="7" fill="#FB7185" transform="rotate(20,16,36)"/><ellipse cx="40" cy="36" rx="9" ry="7" fill="#A78BFA" transform="rotate(-20,40,36)"/><ellipse cx="28" cy="28" rx="3" ry="12" fill="#374151"/><line x1="26" y1="16" x2="18" y2="10" stroke="#374151" stroke-width="2"/><line x1="30" y1="16" x2="38" y2="10" stroke="#374151" stroke-width="2"/></svg>`,
+  elephant:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="30" cy="24" r="14" fill="#94A3B8"/><ellipse cx="16" cy="34" rx="8" ry="5" fill="#94A3B8" transform="rotate(-20,16,34)"/><path d="M16 36 Q10 44 14 50 Q16 52 18 50 Q16 44 20 38" fill="#94A3B8"/><circle cx="34" cy="20" r="3" fill="#1F2937"/><ellipse cx="36" cy="16" rx="4" ry="6" fill="#CBD5E1"/></svg>`,
+  mountain:`<svg width="56" height="56" viewBox="0 0 56 56"><polygon points="28,8 4,48 52,48" fill="#6B7280"/><polygon points="28,8 18,30 38,30" fill="white"/><polygon points="42,20 28,48 56,48" fill="#9CA3AF"/></svg>`,
+  sandwich:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="8" y="10" width="40" height="8" rx="4" fill="#FBBF24"/><rect x="8" y="18" width="40" height="6" rx="1" fill="#86EFAC"/><rect x="8" y="24" width="40" height="6" rx="1" fill="#FCA5A5"/><rect x="8" y="30" width="40" height="6" rx="1" fill="#FDE68A"/><rect x="8" y="36" width="40" height="8" rx="4" fill="#D97706"/></svg>`,
+  teacher:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="16" r="10" fill="#FBBF24"/><rect x="16" y="28" width="24" height="20" rx="4" fill="#3B82F6"/><rect x="4" y="42" width="14" height="4" rx="2" fill="#F3F4F6"/><rect x="4" y="36" width="14" height="8" rx="2" fill="#E2E8F0"/><line x1="16" y1="40" x2="4" y2="40" stroke="#9CA3AF" stroke-width="1.5"/></svg>`,
+  rainbow:`<svg width="56" height="56" viewBox="0 0 56 56"><path d="M6 42 Q6 16 28 16 Q50 16 50 42" stroke="#EF4444" stroke-width="4" fill="none"/><path d="M10 42 Q10 20 28 20 Q46 20 46 42" stroke="#F97316" stroke-width="4" fill="none"/><path d="M14 42 Q14 24 28 24 Q42 24 42 42" stroke="#FCD34D" stroke-width="4" fill="none"/><path d="M18 42 Q18 28 28 28 Q38 28 38 42" stroke="#4ADE80" stroke-width="4" fill="none"/><path d="M22 42 Q22 32 28 32 Q34 32 34 42" stroke="#60A5FA" stroke-width="4" fill="none"/></svg>`,
+  vacation:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="20" r="10" fill="#FCD34D"/><polygon points="28,8 24,20 32,20" fill="#F97316"/><rect x="10" y="36" width="36" height="16" rx="4" fill="#60A5FA"/><circle cx="20" cy="44" r="4" fill="#1E40AF"/><circle cx="36" cy="44" r="4" fill="#1E40AF"/><rect x="24" y="30" width="8" height="10" rx="2" fill="#F97316"/></svg>`,
+  notebook:`<svg width="56" height="56" viewBox="0 0 56 56"><rect x="12" y="6" width="34" height="44" rx="3" fill="#818CF8"/><rect x="16" y="6" width="30" height="44" rx="3" fill="#EDE9FE"/><rect x="8" y="6" width="8" height="44" rx="3" fill="#6D28D9"/><line x1="20" y1="18" x2="42" y2="18" stroke="#A78BFA" stroke-width="2"/><line x1="20" y1="25" x2="42" y2="25" stroke="#A78BFA" stroke-width="2"/><line x1="20" y1="32" x2="42" y2="32" stroke="#A78BFA" stroke-width="2"/><line x1="20" y1="39" x2="34" y2="39" stroke="#A78BFA" stroke-width="2"/></svg>`,
+  penguin:`<svg width="56" height="56" viewBox="0 0 56 56"><ellipse cx="28" cy="32" rx="14" ry="18" fill="#1F2937"/><ellipse cx="28" cy="34" rx="9" ry="12" fill="white"/><circle cx="28" cy="14" r="10" fill="#1F2937"/><circle cx="24" cy="13" r="3" fill="white"/><circle cx="32" cy="13" r="3" fill="white"/><circle cx="24" cy="13" r="1.5" fill="#1F2937"/><circle cx="32" cy="13" r="1.5" fill="#1F2937"/><ellipse cx="28" cy="20" rx="4" ry="2.5" fill="#F97316"/><ellipse cx="16" cy="34" rx="4" ry="8" fill="#1F2937" transform="rotate(20,16,34)"/><ellipse cx="40" cy="34" rx="4" ry="8" fill="#1F2937" transform="rotate(-20,40,34)"/><ellipse cx="22" cy="46" rx="4" ry="2" fill="#F97316"/><ellipse cx="34" cy="46" rx="4" ry="2" fill="#F97316"/></svg>`,
+  default:`<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" fill="#E9D5FF"/><text x="28" y="36" text-anchor="middle" font-size="24" font-family="sans-serif">📝</text></svg>`
+};
+
+// Word bank with Chinese translation
+const ENGLISH = {
+  easy: [
+    {w:'cat',zh:'貓咪'},
+    {w:'dog',zh:'狗狗'},
+    {w:'sun',zh:'太陽'},
+    {w:'apple',zh:'蘋果'},
+    {w:'happy',zh:'開心'},
+    {w:'water',zh:'水'},
+    {w:'bread',zh:'麵包'},
+    {w:'clock',zh:'時鐘'},
+    {w:'house',zh:'房子'},
+    {w:'magic',zh:'魔法'},
+    {w:'mouse',zh:'滑鼠'},
+    {w:'screen',zh:'螢幕'},
+    {w:'button',zh:'按鈕'},
+    {w:'cursor',zh:'游標'},
+    {w:'file',zh:'檔案'},
+    {w:'ocean',zh:'海洋'},
+    {w:'plant',zh:'植物'},
+    {w:'tiger',zh:'老虎'},
+    {w:'email',zh:'電子郵件'},
+    {w:'wifi',zh:'無線網路'},
+  ],
+  medium: [
+    {w:'keyboard',zh:'鍵盤'},
+    {w:'folder',zh:'資料夾'},
+    {w:'internet',zh:'網際網路'},
+    {w:'printer',zh:'印表機'},
+    {w:'camera',zh:'相機'},
+    {w:'robot',zh:'機器人'},
+    {w:'laptop',zh:'筆電'},
+    {w:'upload',zh:'上傳'},
+    {w:'download',zh:'下載'},
+    {w:'video',zh:'影片'},
+    {w:'password',zh:'密碼'},
+    {w:'butterfly',zh:'蝴蝶'},
+    {w:'elephant',zh:'大象'},
+    {w:'mountain',zh:'山'},
+    {w:'sandwich',zh:'三明治'},
+    {w:'teacher',zh:'老師'},
+    {w:'rainbow',zh:'彩虹'},
+    {w:'notebook',zh:'筆記本'},
+    {w:'penguin',zh:'企鵝'},
+    {w:'vacation',zh:'假期'},
+  ],
+  hard: [
+    {w:'computer',zh:'電腦'},
+    {w:'software',zh:'軟體'},
+    {w:'hardware',zh:'硬體'},
+    {w:'database',zh:'資料庫'},
+    {w:'network',zh:'網路'},
+    {w:'bluetooth',zh:'藍牙'},
+    {w:'algorithm',zh:'演算法'},
+    {w:'animation',zh:'動畫'},
+    {w:'document',zh:'文件'},
+    {w:'terminal',zh:'終端機'},
+    {w:'function',zh:'函式'},
+    {w:'variable',zh:'變數'},
+    {w:'language',zh:'語言'},
+    {w:'fantastic',zh:'太棒了'},
+    {w:'butterfly',zh:'蝴蝶'},
+    {w:'wonderful',zh:'美好的'},
+    {w:'elephant',zh:'大象'},
+    {w:'universe',zh:'宇宙'},
+    {w:'adventure',zh:'冒險'},
+    {w:'telescope',zh:'望遠鏡'},
+  ]
+};
+
+const SPECIAL = {
+  easy: [
+    {label:'Ctrl + C　複製',      keys:[{mod:'Ctrl',key:'C'}]},
+    {label:'Ctrl + V　貼上',      keys:[{mod:'Ctrl',key:'V'}]},
+    {label:'Ctrl + Z　復原',      keys:[{mod:'Ctrl',key:'Z'}]},
+    {label:'Ctrl + S　存檔',      keys:[{mod:'Ctrl',key:'S'}]},
+    {label:'Ctrl + A　全選',      keys:[{mod:'Ctrl',key:'A'}]},
+    {label:'Ctrl + X　剪下',      keys:[{mod:'Ctrl',key:'X'}]},
+    {label:'Ctrl + B　粗體',      keys:[{mod:'Ctrl',key:'B'}]},
+    {label:'Ctrl + I　斜體',      keys:[{mod:'Ctrl',key:'I'}]},
+    {label:'Enter　　 確認換行',  keys:[{mod:'',key:'Enter'}]},
+    {label:'Tab　　　 縮排',      keys:[{mod:'',key:'Tab'}]},
+  ],
+  medium: [
+    {label:'Shift + Enter　　  強制換行',  keys:[{mod:'Shift',key:'Enter'}]},
+    {label:'Shift + Tab　　　  取消縮排',  keys:[{mod:'Shift',key:'Tab'}]},
+    {label:'Ctrl + Shift + Z　 取消復原',  keys:[{mod:'Ctrl+Shift',key:'Z'}]},
+    {label:'Ctrl + =　　　　　 放大字體',  keys:[{mod:'Ctrl',key:'='}]},
+    {label:'Ctrl + -　　　　　 縮小字體',  keys:[{mod:'Ctrl',key:'-'}]},
+    {label:'Ctrl + F　　　　　 搜尋',      keys:[{mod:'Ctrl',key:'F'}]},
+    {label:'Ctrl + Enter　　　 送出訊息',  keys:[{mod:'Ctrl',key:'Enter'}]},
+    {label:'Ctrl + D　　　　　 加入書籤',  keys:[{mod:'Ctrl',key:'D'}]},
+    {label:'Ctrl + G　　　　　 尋找下一個',keys:[{mod:'Ctrl',key:'G'}]},
+    {label:'Ctrl + Shift + S　 另存新檔',  keys:[{mod:'Ctrl+Shift',key:'S'}]},
+  ],
+  hard: [
+    {label:'Ctrl + Shift + V　　　貼上純文字',   keys:[{mod:'Ctrl+Shift',key:'V'}]},
+    {label:'Ctrl + Shift + K　　　刪除這一行',   keys:[{mod:'Ctrl+Shift',key:'K'}]},
+    {label:'Ctrl + Shift + L　　　選取所有相同', keys:[{mod:'Ctrl+Shift',key:'L'}]},
+    {label:'Ctrl + Shift + P　　　指令面板',     keys:[{mod:'Ctrl+Shift',key:'P'}]},
+    {label:'Ctrl + Shift + Enter　在上方新增行', keys:[{mod:'Ctrl+Shift',key:'Enter'}]},
+    {label:'Alt + Shift + F　　　　格式化程式碼',keys:[{mod:'Alt+Shift',key:'F'}]},
+    {label:'Ctrl + K → Ctrl + D　　格式化選取', keys:[{mod:'Ctrl',key:'K'},{mod:'Ctrl',key:'D'}]},
+    {label:'Ctrl + Shift + I　　　開發者工具',   keys:[{mod:'Ctrl+Shift',key:'I'}]},
+  ]
+};
+
+const RESULT_MSGS = {
+  perfect:['超級棒！你是打字小英雄！🦸','哇！滿分！你太厲害了！🌟','完美無缺！繼續加油！✨'],
+  great:  ['好厲害喔！繼續練習吧！💪','表現很棒！再挑戰一次！🎯','差一點點就完美了！🌈'],
+  ok:     ['做得好！多練習會更棒！😊','加油！你一定可以進步！🌱','繼續努力！你做到了！👏'],
+  keep:   ['沒關係！多練習就會進步！🐣','加油加油！不要放棄！🔥','每次練習都會變更強！💫']
+};
+
+let mode='english', questions=[], qIndex=0, totalQ=10;
+let correctCount=0, totalErrors=0;
+let currentQ=null, keySeqIndex=0;
+let englishTyped=[], keyTypedLog=[];
+let sessionActive=false;
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['english','special','mixed'][i]===m));
+}
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function buildQuestions(){
+  const diff=document.getElementById('difficulty').value;
+  totalQ=parseInt(document.getElementById('total-q').value);
+  const pool=[];
+  if(mode==='english'||mode==='mixed')
+    shuffle(ENGLISH[diff]).slice(0,mode==='mixed'?Math.ceil(totalQ/2):totalQ).forEach(o=>pool.push({type:'english',text:o.w,zh:o.zh}));
+  if(mode==='special'||mode==='mixed'){
+    const need=mode==='mixed'?Math.floor(totalQ/2):totalQ;
+    shuffle(SPECIAL[diff]).slice(0,need).forEach(s=>pool.push({type:'special',...s}));
+  }
+  return shuffle(pool).slice(0,totalQ);
+}
+
+function startSession(){
+  questions=buildQuestions();
+  qIndex=0;correctCount=0;totalErrors=0;sessionActive=true;
+  document.getElementById('practice-area').classList.remove('hidden');
+  document.getElementById('result-panel').classList.add('hidden');
+  loadQuestion();updateStats();
+}
+
+function getIcon(word){return ICONS[word]||ICONS.default;}
+
+function loadQuestion(){
+  if(qIndex>=questions.length){showResult();return;}
+  currentQ=questions[qIndex];keySeqIndex=0;englishTyped=[];keyTypedLog=[];
+  document.getElementById('ghost').value='';
+  buildQuestionUI();
+  setHint();focusInput();
+  document.getElementById('progress-bar').style.width=(qIndex/questions.length*100)+'%';
+  document.getElementById('q-progress').textContent=`${qIndex+1}/${questions.length}`;
+}
+
+function buildQuestionUI(){
+  const area=document.getElementById('question-area');
+  if(currentQ.type==='english'){
+    area.innerHTML=`
+      <div class="word-card" onclick="focusInput()">
+        <div class="word-card-top">
+          <div class="hint-side">
+            ${getIcon(currentQ.text)}
+            <div class="zh">${currentQ.zh}</div>
+          </div>
+          <div class="typing-side">
+            <div class="row-label target-label">📖 目標</div>
+            <div class="target-text" id="display"></div>
+          </div>
+        </div>
+        <div class="typed-row-inner">
+          <div class="row-label typed-label">✏️ 你輸入的</div>
+          <div class="typed-text" id="typed-display"><span class="t-cursor"></span></div>
+        </div>
+      </div>`;
+  } else {
+    area.innerHTML=`
+      <div class="special-card" onclick="focusInput()">
+        <div class="special-target">
+          <div class="row-label target-label">📖 目標</div>
+          <div id="display" style="font-size:18px;line-height:2;"></div>
+        </div>
+        <div id="typed-section">
+          <div class="key-typed-row">
+            <div class="row-label" style="font-size:11px;font-weight:900;color:#34D399;letter-spacing:.1em;text-transform:uppercase;width:100%;margin-bottom:6px;">✏️ 你按的</div>
+            <span class="key-typed-empty">等待你按下按鍵…</span>
+          </div>
+        </div>
+      </div>`;
+  }
+  renderTarget();
+}
+
+function keyDN(k){const m={ArrowDown:'↓',ArrowUp:'↑',ArrowLeft:'←',ArrowRight:'→',Enter:'Enter',Delete:'Del',Tab:'Tab'};return m[k]||k;}
+
+function renderTarget(){
+  const d=document.getElementById('display');
+  if(!d)return;
+  if(currentQ.type==='english'){
+    const t=currentQ.text;let html='';
+    for(let i=0;i<t.length;i++){
+      let c='ch';
+      if(i<englishTyped.length)c+=englishTyped[i]===t[i]?' correct':' error';
+      else if(i===englishTyped.length)c+=' current';
+      html+=`<span class="${c}">${t[i]}</span>`;
+    }
+    d.innerHTML=html;
+  } else {
+    d.innerHTML=currentQ.keys.map((k,i)=>{
+      let c='key-badge';
+      if(i<keySeqIndex)c+=' correct';
+      else if(i===keySeqIndex)c+=' current';
+      const mods=k.mod?k.mod.split('+').join('<span style="opacity:.5;padding:0 2px">+</span>'):'';
+      const plus=k.mod?'<span style="opacity:.4;padding:0 3px">+</span>':'';
+      return `<span class="${c}">${mods}${plus}${keyDN(k.key)}</span>`;
+    }).join('<span style="color:#C4B5FD;padding:0 6px;font-size:18px">→</span>');
+  }
+}
+
+function renderTyped(){
+  if(currentQ.type==='english'){
+    const td=document.getElementById('typed-display');
+    if(!td)return;
+    const t=currentQ.text;let html='';
+    for(let i=0;i<englishTyped.length;i++)
+      html+=`<span class="${englishTyped[i]===t[i]?'t-correct':'t-error'}">${englishTyped[i]}</span>`;
+    td.innerHTML=html+'<span class="t-cursor"></span>';
+  } else {
+    const sec=document.getElementById('typed-section');
+    if(!sec)return;
+    sec.innerHTML=`<div class="key-typed-row"><div class="row-label" style="font-size:11px;font-weight:900;color:#34D399;letter-spacing:.1em;text-transform:uppercase;width:100%;margin-bottom:6px;">✏️ 你按的</div>${keyTypedLog.length===0?'<span class="key-typed-empty">等待你按下按鍵…</span>':keyTypedLog.map(e=>`<span class="key-typed-badge ${e.ok?'ok':'fail'}">${e.display}</span>`).join('')}</div>`;
+  }
+}
+
+function setHint(){
+  const h=document.getElementById('hint-bar');
+  if(currentQ.type==='english'){
+    h.innerHTML=`👇 請輸入：<span>${currentQ.text}</span>（${currentQ.zh}）`;
+  } else {
+    const k=currentQ.keys[keySeqIndex];
+    const combo=(k.mod?k.mod+'+':'')+keyDN(k.key);
+    const step=currentQ.keys.length>1?` （第 ${keySeqIndex+1}/${currentQ.keys.length} 步）`:'';
+    h.innerHTML=`⌨️ 請按：<span>${combo}</span>${step}`;
+  }
+}
+
+function focusInput(){document.getElementById('ghost').focus();}
+function updateStats(){
+  document.getElementById('accuracy').textContent=qIndex===0?'—':Math.round(correctCount/qIndex*100)+'%';
+  document.getElementById('err-count').textContent=totalErrors;
+}
+function markCorrect(){correctCount++;qIndex++;updateStats();document.getElementById('progress-bar').style.width=(qIndex/questions.length*100)+'%';setTimeout(loadQuestion,350);}
+function markError(){totalErrors++;updateStats();}
+function skipQuestion(){qIndex++;updateStats();loadQuestion();}
+
+document.getElementById('ghost').addEventListener('keydown',function(e){
+  if(!sessionActive||!currentQ)return;
+  if(currentQ.type==='special'){
+    e.preventDefault();
+    const k=currentQ.keys[keySeqIndex];
+    const nC=k.mod.includes('Ctrl'),nS=k.mod.includes('Shift'),nA=k.mod.includes('Alt');
+    if(['Control','Shift','Alt','Meta'].includes(e.key))return;
+    const km=e.key.toUpperCase()===k.key.toUpperCase()||e.key===k.key;
+    const mm=(!nC||e.ctrlKey)&&(!nS||e.shiftKey)&&(!nA||e.altKey)&&(nC||!e.ctrlKey)&&(nS||!e.shiftKey)&&(nA||!e.altKey);
+    const parts=[];
+    if(e.ctrlKey)parts.push('Ctrl');if(e.shiftKey)parts.push('Shift');if(e.altKey)parts.push('Alt');
+    parts.push(keyDN(e.key));
+    keyTypedLog.push({display:parts.join('+'),ok:km&&mm});
+    renderTyped();
+    if(km&&mm){keySeqIndex++;if(keySeqIndex>=currentQ.keys.length){renderTarget();markCorrect();}else{renderTarget();setHint();}}
+    else markError();
+  } else {
+    if(e.key==='Backspace'){e.preventDefault();if(englishTyped.length>0){englishTyped.pop();renderTarget();renderTyped();}return;}
+    if(e.key.length===1){
+      e.preventDefault();
+      const idx=englishTyped.length;if(idx>=currentQ.text.length)return;
+      englishTyped.push(e.key);
+      if(e.key!==currentQ.text[idx])markError();
+      renderTarget();renderTyped();
+      if(englishTyped.length===currentQ.text.length)markCorrect();
+    }
+  }
+});
+
+function showResult(){
+  sessionActive=false;
+  document.getElementById('practice-area').classList.add('hidden');
+  document.getElementById('result-panel').classList.remove('hidden');
+  const pct=Math.round(correctCount/questions.length*100);
+  document.getElementById('final-acc').textContent=pct+'%';
+  document.getElementById('r-total').textContent=questions.length;
+  document.getElementById('r-correct').textContent=correctCount;
+  document.getElementById('r-errors').textContent=totalErrors;
+  const tier=pct===100?'perfect':pct>=80?'great':pct>=60?'ok':'keep';
+  const msgs=RESULT_MSGS[tier];
+  document.getElementById('result-msg').textContent=msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('result-star').textContent=pct===100?'🏆':pct>=80?'🌟':pct>=60?'😊':'🌱';
+}
+</script>
